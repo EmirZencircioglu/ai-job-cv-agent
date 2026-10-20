@@ -1,0 +1,101 @@
+# ============================================================
+#  İş İlanı & CV Agent'ı — Ayarlar
+# ============================================================
+
+gemini:
+  model: "gemini-3.8-flash"
+  fallback_models:
+    - "gemini-3.7-flash"
+    - "gemini-3.6-flash"
+    - "gemini-3.5-flash"
+    - "gemini-3-flash-preview"
+    - "gemini-3.5-flash-lite"
+    - "gemini-3.1-flash-lite"
+
+paths:
+  cv_pdf: "data/cv.pdf"
+  profile_json: "data/profile.json"
+  database: "data/jobs.db"
+  output_dir: "output"
+
+search:
+  # LinkedIn 429 hız sınırına takılmamak için kelimeler OR ile 3 ana sorguda birleştirildi
+  # (f_E=1 staj filtresi zaten otomatik ekleniyor)
+  keywords:
+    - "Finans OR Finance OR Yatırım OR Investment"
+    - "Veri Analizi OR Data Analyst OR Portföy OR Portfolio"
+    - "Uzun Dönem Stajyer OR Long Term Intern"
+
+  location: "İstanbul"
+  experience_level: "internship"   # stajyer
+
+  # Staj türü tercihleri (puanlamada artı puan sebebi)
+  internship_preferences:
+    durations_months: [3, 6, 9]
+    project_based: true
+    part_time_ok: true             # Uzun dönem stajlar genelde yarı zamanlı
+
+  # Bu kelimeleri içeren ilanlar LLM'e gitmeden elenir (kota tasarrufu)
+  exclude_keywords:
+    - "Senior"
+    - "Kıdemli"
+    - "Müdür"
+    - "Manager"
+    - "Uzman"
+    - "Specialist"
+    - "Associate"
+    - "Direktör"
+    - "Director"
+    - "Lise"
+    - "Avukat"
+    - "Hukuk"
+    - "İnsan Kaynakları"
+    - "Human Resources"
+    - "HR "
+    - "Tasarım"
+    - "Grafik"
+    - "Mimar"
+    - "Peyzaj"
+    - "Lojistik"
+    - "İhracat"
+    - "Müşteri Hizmetleri"
+    - "Customer Services"
+    - "Satış Sonrası"
+    - "Pazarlama"
+    - "Marketing"
+    - "İletişim"
+    - "Elektronik"
+    - "Laboratuvar"
+    - "Lab."
+    - "Kimya"
+    - "Yazılım Test"
+    - "System and Service Monitoring"
+    - "Cevher"
+
+matching:
+  min_score: 65                    # Bu skorun altındaki ilanlar bildirilmez (0-100)
+
+sources:
+  max_new_jobs_per_run: 25         # Bir taramada detayına bakılacak en fazla yeni ilan
+  linkedin:
+    enabled: true
+    location: "Istanbul, Turkey"   # LinkedIn Türkçe 'İ' harfini tanımıyor, ASCII yazılmalı
+    posted_within_days: 7
+  kariyernet:
+    enabled: true
+    # kariyer.net/is-ilanlari/istanbul-<sorgu> şeklinde aranır
+    queries:
+      - "finans-stajyer"
+      - "veri-analizi-stajyer"
+      - "yatirim-stajyer"
+      - "portfoy-stajyer"
+      - "finansal-analiz-stajyer"
+      - "uzun-donem-stajyer"
+  gmail:
+    enabled: true                  # .env'de Gmail bilgileri yoksa otomatik atlanır
+    lookback_days: 3
+
+scheduler:
+  interval_minutes: 60             # Saat başı (60 dk) otomatik tarama
+  jitter_minutes: 5                # +/- 5 dk küçük rastgele sapma
+  quiet_hours: [3, 7]              # Gece 03:00 - 07:00 arası sessiz saatler

@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: emir-is-asistani
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: CANDIDATE_EMAIL
+        sync: false
+      - key: CANDIDATE_PHONE
+        sync: false
+      - key: CANDIDATE_LOCATION
+        sync: false
+      - key: TZ
+        value: Europe/Istanbul

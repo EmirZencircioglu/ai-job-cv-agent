@@ -1,0 +1,9 @@
+google-genai>=1.0.0
+pydantic>=2.6
+pyyaml>=6.0
+python-dotenv>=1.0
+httpx>=0.27
+certifi
+beautifulsoup4>=4.12
+python-telegram-bot[job-queue]>=21.0
+fpdf2>=2.8

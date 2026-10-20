@@ -1,0 +1,13 @@
+.env
+.venv/
+venv/
+.git/
+__pycache__/
+*.pyc
+data/cv.pdf
+data/jobs.db
+data/jobs.db-*
+data/bot_state.json
+data/state.json
+data/model_usage.json
+output/*.pdf

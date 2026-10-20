@@ -1,0 +1,11 @@
+services:
+  job-agent:
+    build: .
+    container_name: emir-is-asistani
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./config.yaml:/app/config.yaml:ro

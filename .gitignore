@@ -1,0 +1,23 @@
+# Gizli anahtarlar ve kişisel CV (ASLA GitHub'a yüklenmemeli)
+.env
+.env.*
+!.env.example
+data/cv.pdf
+
+# Python ve sanal ortam
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Çalışma zamanı veritabanı ve üretilen geçici PDF'ler
+data/jobs.db
+data/jobs.db-*
+data/bot_state.json
+data/state.json
+data/model_usage.json
+output/*.pdf
+
+# İşletim sistemi dosyaları
+.DS_Store
+Thumbs.db

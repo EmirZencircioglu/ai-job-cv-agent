@@ -1,0 +1,167 @@
+{
+  "full_name": "Emir Zencircioğlu",
+  "email": "",
+  "phone": "",
+  "location": "İstanbul",
+  "links": [
+    "LinkedIn",
+    "Github"
+  ],
+  "summary": "I am a third-year Finance and Banking student aiming to build my career in investment, portfolio management, and treasury. I develop financial data analysis and fintech projects using Python, SQL, and Excel. I am currently preparing for Capital Markets Licensing exams while strengthening my analytical thinking, teamwork, and leadership skills through student club activities.",
+  "education": [
+    {
+      "school": "Nişantaşı University",
+      "degree": "",
+      "field": "Finance and Banking",
+      "start": "2024",
+      "end": "2028",
+      "gpa": "",
+      "details": []
+    }
+  ],
+  "experience": [
+    {
+      "title": "Stock Market and Investment Club",
+      "company": "Event Organizer",
+      "location": "",
+      "start": "October 2025",
+      "end": "Present",
+      "bullets": [
+        "Organized 3 institutional seminars and technical visits with more than 50 participants."
+      ]
+    },
+    {
+      "title": "Human Resources Assistant",
+      "company": "100sClub",
+      "location": "",
+      "start": "August 2025",
+      "end": "Present",
+      "bullets": [
+        "Managed candidate communication and interview organization processes.",
+        "Supported the planning and coordination of campus programs."
+      ]
+    },
+    {
+      "title": "AI Project Developer Intern",
+      "company": "Microsoft",
+      "location": "",
+      "start": "July 2026",
+      "end": "August 2026",
+      "bullets": [
+        "Developed a locally running financial RAG assistant using Microsoft Foundry Local, Qwen3-8B, Node.js, and SQLite.",
+        "Implemented document search, source-cited responses, financial safety checks, and automated testing processes."
+      ]
+    },
+    {
+      "title": "Vice President",
+      "company": "Finance and Banking Club",
+      "location": "",
+      "start": "October 2024",
+      "end": "June 2025",
+      "bullets": [
+        "Organized finance summits and technical visits.",
+        "Invited speakers to the university campus and contributed to events through corporate sponsorship agreements."
+      ]
+    },
+    {
+      "title": "Teller Intern",
+      "company": "NKolay Payment Institution",
+      "location": "",
+      "start": "September 2022",
+      "end": "June 2023",
+      "bullets": [
+        "Managed more than 50 financial transactions daily with 100% accuracy, contributing to operational efficiency and customer satisfaction."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "FinansBot – Local Financial RAG Assistant",
+      "description": "Developed a locally running financial RAG system using Node.js, Foundry Local, and Qwen3-8B. Created an AI application capable of generating source-cited answers based on financial documents.",
+      "technologies": [
+        "Node.js",
+        "Foundry Local",
+        "Qwen3-8B",
+        "SQLite"
+      ]
+    },
+    {
+      "name": "AI-Powered Financial Statement Analysis",
+      "description": "Developed an application that analyzes financial statements imported into Excel. Generated AI-powered balance sheet interpretations.",
+      "technologies": [
+        "Excel",
+        "AI"
+      ]
+    },
+    {
+      "name": "AI-Powered Technical Analysis",
+      "description": "Developed an application that interprets RSI and MACD indicators. Provided investment alternatives based on different market scenarios.",
+      "technologies": [
+        "Python",
+        "Technical Indicators (RSI, MACD)"
+      ]
+    }
+  ],
+  "technical_skills": [
+    "Python",
+    "SQL",
+    "Node.js",
+    "Microsoft Excel",
+    "RAG",
+    "Qwen3-8B",
+    "Foundry Local",
+    "SQLite"
+  ],
+  "finance_skills": [
+    "Financial Analysis",
+    "Technical Analysis",
+    "Fundamental Analysis",
+    "Risk Management",
+    "Portfolio Monitoring",
+    "Financial Statement Analysis",
+    "Balance Sheet Interpretations"
+  ],
+  "soft_skills": [
+    "Analytical thinking",
+    "Teamwork",
+    "Leadership",
+    "Communication",
+    "Event organization"
+  ],
+  "languages": [
+    "English (Intermediate)",
+    "Spanish (Beginner)"
+  ],
+  "certificates": [
+    "Capital Markets Activities Level 1 License (Exam Preparation Process)",
+    "Microsoft | AI Innovators Summer Internship (August 2026)",
+    "TSKB | Future of Finance Academy (July 2026)",
+    "HSBC | Step Up Banking Program (December 2025)",
+    "QNB Bank | Online Internship Program (August 2025)",
+    "İş Bankası | Next Generation Banking Simulation (June 2025)",
+    "DenizBank | Denizaşırı Online Internship Program (April 2025)"
+  ],
+  "target_roles": [
+    "Veri Analizi Stajyeri",
+    "Data Analyst Intern",
+    "Finans Stajyeri",
+    "Finance Intern",
+    "Yatırım Stajyeri",
+    "Investment Intern",
+    "Portföy Yönetimi Stajyeri",
+    "Portfolio Management Intern",
+    "Uzun Dönem Stajyer",
+    "Proje Bazlı Stajyer"
+  ],
+  "strengths": [
+    "Finans ve bankacılık akademik altyapısını Python, SQL ve RAG tabanlı yapay zeka/fintech projeleriyle birleştirmesi",
+    "Mali tablo analizi, teknik ve temel analiz konularında hands-on proje deneyimi",
+    "Finans ve yatırım kulüplerinde aktif liderlik ve organizasyon tecrübesi",
+    "Ödeme kuruluşu ve kurumsal program deneyimleri"
+  ],
+  "gaps": [
+    "SPL Düzey 1 lisansının hazırlık aşamasında olması, henüz tamamlanmamış olması",
+    "İngilizce seviyesinin Intermediate düzeyinde olması (uluslararası yatırım/portföy yönetimi rolleri için C1 aranabilmektedir)",
+    "Power BI, Tableau veya Bloomberg/FactSet gibi ileri düzey veri görselleştirme veya finansal terminal deneyiminin belirtilmemiş olması"
+  ]
+}
