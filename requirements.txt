@@ -7,3 +7,4 @@ certifi
 beautifulsoup4>=4.12
 python-telegram-bot[job-queue]>=21.0
 fpdf2>=2.8
+ddgs>=9.0

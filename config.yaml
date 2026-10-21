@@ -83,14 +83,12 @@ sources:
     posted_within_days: 7
   kariyernet:
     enabled: true
-    # kariyer.net/is-ilanlari/istanbul-<sorgu> şeklinde aranır
+    # kariyer.net/is-ilanlari/stajyer?ct=34,82&kw=<sorgu> (ve 403 durumunda arama motoru köprüsü) ile aranır
     queries:
-      - "finans-stajyer"
-      - "veri-analizi-stajyer"
-      - "yatirim-stajyer"
-      - "portfoy-stajyer"
-      - "finansal-analiz-stajyer"
-      - "uzun-donem-stajyer"
+      - "finans"
+      - "veri analiz"
+      - "yatırım"
+      - "portföy"
   gmail:
     enabled: true                  # .env'de Gmail bilgileri yoksa otomatik atlanır
     lookback_days: 3

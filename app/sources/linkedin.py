@@ -56,32 +56,27 @@ def _parse_cards(html_text: str, jobs: dict[str, Job]) -> int:
 
 
 def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
-    """LinkedIn'e hiç dokunmadan DuckDuckGo üzerinden yeni LinkedIn staj ilanlarını bulur."""
+    """LinkedIn'e hiç dokunmadan arama motoru köprüsü üzerinden yeni LinkedIn staj ilanlarını bulur."""
+    from ddgs import DDGS
+
     queries = [
-        'site:linkedin.com/jobs/view (Finans OR Finance OR Yatırım OR Investment OR Portföy) (Stajyer OR Intern) Istanbul',
-        'site:linkedin.com/jobs/view ("Veri Analizi" OR "Data Analyst" OR "Business Intelligence") (Stajyer OR Intern) Istanbul',
+        "site:linkedin.com/jobs/view (Finans OR Finance OR Yatırım OR Investment OR Portföy) (Stajyer OR Intern) Istanbul",
+        "site:linkedin.com/jobs/view (Data Analyst OR Veri Analizi OR Business Intelligence) (Stajyer OR Intern) Istanbul",
     ]
     added = 0
+    ddgs = DDGS()
     for q in queries:
         try:
-            r = client.post(DDG_HTML_URL, data={"q": q, "df": "w"}, headers=random_headers())
-            if r.status_code != 200:
-                continue
-            soup = BeautifulSoup(r.text, "html.parser")
-            for res in soup.select(".result"):
-                a = res.select_one("a.result__a")
-                snippet = _text(res.select_one(".result__snippet"))
-                if not a:
-                    continue
-                href = urllib.parse.unquote(a.get("href", ""))
+            for res in ddgs.text(q, region="tr-tr", max_results=10, backend="yahoo"):
+                href = urllib.parse.unquote(res.get("href", ""))
                 m = re.search(r"linkedin\.com/jobs/view/[^\"<>?\s]*?(\d{8,12})", href)
                 if not m:
                     continue
                 jid = m.group(1)
                 if jid in jobs:
                     continue
-                raw_title = _text(a)
-                # Örn: "HSBC hiring Investment Banking Intern in Istanbul..."
+                raw_title = res.get("title", "")
+                snippet = res.get("body", "")
                 title, company = raw_title, "LinkedIn İlanı"
                 hm = re.match(r"^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+|\s*\|\s*LinkedIn|$)", raw_title, re.I)
                 if hm:
@@ -98,9 +93,9 @@ def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
                     description=snippet,
                 )
                 added += 1
-        except httpx.HTTPError as e:
+        except Exception as e:  # noqa: BLE001
             log.debug("DDG LinkedIn yedek arama hatası: %s", e)
-        polite_sleep(1.5, 3.0)
+        polite_sleep(1.0, 2.0)
     return added
 
 
