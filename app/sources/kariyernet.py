@@ -1,14 +1,15 @@
-"""Kariyer.net çok kanallı (Cloudflare 403 engeline takılmayan) ilan arama ve detay modülü.
+"""Kariyer.net çok kanallı (Cloudflare 403 engeline takılmayan, son 3 gün & anlık yeni ilan odaklı) arama modülü.
 
 Kullanılan kanallar:
-1. Doğrudan SSR Staj Arama (`https://www.kariyer.net/is-ilanlari/stajyer?ct=34,82&kw=...`) — Gerçek tarayıcı başlıklarıyla dener; bulut IP'si 403 alırsa erken devre kesiciyle (circuit breaker) anında 2. kanala geçer.
-2. Arama Motoru Köprüsü (`ddgs` Yahoo/DuckDuckGo indeksi `site:kariyer.net/is-ilani`) — Kariyer.net sunucularına hiç dokunmadan (403 engeline takılmadan) İstanbul staj ilanlarını bulur.
+1. Doğrudan SSR Staj Arama (`https://www.kariyer.net/is-ilanlari/stajyer?ct=34,82&kw=...`) — Kart üzerindeki `time` değerini kontrol ederek 3 günden eski ilanları kesin olarak eler.
+2. Arama Motoru Köprüsü (`ddgs` indeksi `site:kariyer.net/is-ilani`) — Bulut IP'si 403 alırsa son günlerin indeksinden (`timelimit="w"`) taze ilanları bulur, eski tarihli olanları eler.
 3. Detay 403 Yedeği — Detay sayfası 403 döndürürse arama motorundan gelen özet açıklama (snippet) ile devam eder.
 """
 from __future__ import annotations
 
 import logging
 import re
+from datetime import date, datetime
 
 import httpx
 from bs4 import BeautifulSoup
@@ -40,9 +41,45 @@ def _browser_headers() -> dict[str, str]:
     return h
 
 
+def _is_fresh_kariyer(time_str: str, max_days: int = 3) -> bool:
+    """Kariyer.net kartındaki 'time' değerinin son `max_days` (3 gün) içinde olup olmadığını kontrol eder."""
+    if not time_str:
+        return True
+    low = time_str.strip().lower()
+    if any(k in low for k in ("bugün", "dün", "saat", "dakika", "sn", "yeni", "az önce")):
+        return True
+    if any(k in low for k in ("hafta", "ay", "yıl")):
+        return False
+    m = re.search(r"(\d+)\s*gün", low)
+    if m:
+        return int(m.group(1)) <= max_days
+    return False
+
+
+def _is_fresh_bridge_text(raw_title: str, body: str, max_days: int = 3) -> tuple[bool, str]:
+    """Arama motoru köprüsünden gelen ilanın başlık/özetindeki tarihi kontrol eder."""
+    combined = f"{raw_title} {body}"
+    today = date.today()
+    for dm in re.finditer(r"\b(\d{2})\.(\d{2})\.(\d{4})\b", combined):
+        try:
+            d = date(int(dm.group(3)), int(dm.group(2)), int(dm.group(1)))
+            diff = (today - d).days
+            if diff > max_days:
+                return False, ""
+            return True, f"{dm.group(0)} ({diff} gün önce)" if diff > 0 else f"Bugün ({dm.group(0)})"
+        except ValueError:
+            continue
+    low = combined.lower()
+    if any(w in low for w in ("week", "hafta", "month", "ay önce", "year", "yıl")):
+        return False, ""
+    m = re.search(r"(\d+)\s*(?:day|gün)", low)
+    if m and int(m.group(1)) > max_days:
+        return False, ""
+    return True, f"Son {max_days} gün içinde"
+
+
 def _parse_bridge_item(raw_title: str, body: str) -> tuple[str, str]:
     """Arama motoru sonucundan (başlık ve özet) şirket ve pozisyon adını ayrıştırır."""
-    # Örn: "Kariyer.net'teki Diversey firmasına ait Finans Stajyeri iş ilanını hemen inceleyin"
     m = re.search(r"Kariyer\.net'teki\s+(.+?)\s+firmasına\s+ait\s+(.+?)\s+iş\s+ilanını", body, re.I)
     if m:
         return m.group(2).strip(), m.group(1).strip()
@@ -51,15 +88,18 @@ def _parse_bridge_item(raw_title: str, body: str) -> tuple[str, str]:
     clean = re.sub(r"\s*[-|]\s*\d{2}\.\d{2}\.\d{4}.*$", "", clean).strip()
     clean = re.sub(r"\s+İş\s+İlanı.*$", "", clean, flags=re.I).strip()
 
-    # Örn: "Diversey Finans Stajyeri" veya "Tam Finans Faktoring A.Ş. Uzun Dönem Stajyer"
-    m2 = re.match(r"^(.+?)\s+((?:Uzun Dönem\s+|Üniversite\s+|Zorunlu\s+)?(?:[\wÇĞİÖŞÜçğıöşü]+\s+){0,2}Stajyer[i]?.*)$", clean, re.I)
+    m2 = re.match(
+        r"^(.+?)\s+((?:Uzun Dönem\s+|Üniversite\s+|Zorunlu\s+)?(?:[\wÇĞİÖŞÜçğıöşü]+\s+){0,2}Stajyer[i]?.*)$",
+        clean,
+        re.I,
+    )
     if m2:
         return m2.group(2).strip(), m2.group(1).strip()
     return clean, "Kariyer.net İlanı"
 
 
-def _search_via_bridge(jobs: dict[str, Job]) -> int:
-    """Bulut IP'si 403 aldığında arama motoru köprüsü üzerinden Kariyer.net staj ilanlarını çeker."""
+def _search_via_bridge(jobs: dict[str, Job], max_days: int = 3) -> int:
+    """Bulut IP'si 403 aldığında arama motoru köprüsü üzerinden son 3 günün Kariyer.net staj ilanlarını çeker."""
     queries = [
         "site:kariyer.net/is-ilani stajyer istanbul finans",
         "site:kariyer.net/is-ilani stajyer istanbul yatırım OR portföy",
@@ -67,10 +107,9 @@ def _search_via_bridge(jobs: dict[str, Job]) -> int:
         "site:kariyer.net/is-ilani uzun dönem stajyer istanbul finans OR banka",
     ]
     added = 0
-    ddgs = DDGS()
     for q in queries:
         try:
-            results = ddgs.text(q, region="tr-tr", max_results=10, backend="yahoo")
+            results = DDGS().text(q, region="tr-tr", timelimit="w", max_results=10, backend="yahoo")
             for item in results:
                 href = item.get("href", "")
                 m = re.search(r"kariyer\.net(/is-ilani/[^?#\s\"'<>]+-(\d{6,10}))", href)
@@ -82,6 +121,10 @@ def _search_via_bridge(jobs: dict[str, Job]) -> int:
 
                 raw_title = item.get("title", "")
                 body = item.get("body", "")
+                is_fresh, label = _is_fresh_bridge_text(raw_title, body, max_days=max_days)
+                if not is_fresh:
+                    continue
+
                 title, company = _parse_bridge_item(raw_title, body)
                 if "staj" not in title.lower() and "intern" not in title.lower():
                     title = f"{title} (Stajyer)"
@@ -93,8 +136,9 @@ def _search_via_bridge(jobs: dict[str, Job]) -> int:
                     company=company,
                     location="İstanbul",
                     url=BASE + path_part,
+                    posted=label,
                     description=body or f"{title} — {company} (İstanbul)",
-                    extra={"Pozisyon": "Stajyer"},
+                    extra={"Pozisyon": "Stajyer", "Yayınlanma": label},
                 )
                 added += 1
         except Exception as e:  # noqa: BLE001
@@ -108,6 +152,7 @@ def search(
     queries: list[str],
     city_slug: str = "istanbul",
     on_issue: ProgressFn = noop,
+    max_days: int = 3,
 ) -> list[Job]:
     jobs: dict[str, Job] = {}
     direct_blocked = False
@@ -134,6 +179,9 @@ def search(
 
         soup = BeautifulSoup(r.text, "html.parser")
         for card in soup.find_all("div", attrs={"data-test": "ad-card"}):
+            time_str = card.get("time", "")
+            if not _is_fresh_kariyer(time_str, max_days=max_days):
+                continue
             a = card.select_one("a[href*='/is-ilani/']")
             if not a:
                 continue
@@ -149,23 +197,24 @@ def search(
                 company=_text(card.find(attrs={"data-test": "subtitle"})),
                 location=card.get("cityname", "İstanbul"),
                 url=BASE + href,
-                posted=card.get("time", ""),
+                posted=time_str or "Yeni",
                 extra={
                     "Pozisyon": card.get("positionname", "Stajyer"),
                     "Çalışma şekli": card.get("worktypetext", ""),
                     "Çalışma modeli": card.get("workmodeltext", ""),
                     "Sektör": card.get("sectorname", ""),
+                    "Yayınlanma": time_str or "Yeni",
                 },
             )
         polite_sleep()
 
-    # 2. Kanal: Doğrudan kanal 403 aldıysa veya ek kaynak olarak Arama Motoru Köprüsü
-    if direct_blocked or not jobs:
-        bridge_count = _search_via_bridge(jobs)
+    # 2. Kanal: Doğrudan kanal 403 aldıysa Arama Motoru Köprüsü
+    if direct_blocked:
+        bridge_count = _search_via_bridge(jobs, max_days=max_days)
         if bridge_count:
-            log.info("Kariyer.net (arama motoru köprüsü): %d ilan bulundu", bridge_count)
+            log.info("Kariyer.net (arama motoru köprüsü): %d taze ilan bulundu", bridge_count)
 
-    log.info("Kariyer.net (çok kanallı): toplam %d ilan bulundu", len(jobs))
+    log.info("Kariyer.net (son %d gün): toplam %d taze ilan bulundu", max_days, len(jobs))
     return list(jobs.values())
 
 

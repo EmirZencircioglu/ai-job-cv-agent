@@ -1,17 +1,16 @@
-"""LinkedIn çok kanallı (429 hız sınırına takılmayan) ilan arama ve detay çekme modülü.
+"""LinkedIn çok kanallı (429 hız sınırına takılmayan, son 3 gün & anlık yeni ilan odaklı) arama modülü.
 
 Kullanılan 3 alternatif kanal:
-1. Ana SSR Arama Sayfası (`https://www.linkedin.com/jobs/search`) — Tek istekte ~60 ilan döner, API kotasına takılmaz.
+1. Ana SSR Arama Sayfası (`https://www.linkedin.com/jobs/search`) — En yeniden eskiye (`sortBy=DD`) sıralar ve kart üzerindeki yayın tarihini (`<time datetime>`) kontrol ederek 3 günden eski ilanları kesin olarak eler.
 2. Yedek Guest API (`https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search`) — 1. kanal başarısız olursa devreye girer.
-3. Arama Motoru Köprüsü (DuckDuckGo `site:linkedin.com/jobs/view`) — LinkedIn sunucularına hiç istek atmadan indeks üzerinden ilan bulur.
-
-Detay çekme için de önce doğrudan web ilan sayfası (`tr.linkedin.com/jobs/view/<id>`), yedek olarak Guest API kullanılır.
+3. Arama Motoru Köprüsü (`site:linkedin.com/jobs/view`) — Doğrudan kanallar yanıt vermezse son günlerin indeksinden (`timelimit="w"`) taze ilanları bulur.
 """
 from __future__ import annotations
 
 import logging
 import re
 import urllib.parse
+from datetime import date, datetime
 
 import httpx
 from bs4 import BeautifulSoup
@@ -25,14 +24,43 @@ SSR_SEARCH_URL = "https://www.linkedin.com/jobs/search"
 API_SEARCH_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 WEB_DETAIL_URL = "https://tr.linkedin.com/jobs/view/{id}"
 API_DETAIL_URL = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{id}"
-DDG_HTML_URL = "https://html.duckduckgo.com/html/"
+
+OLD_SNIPPET_RE = re.compile(r"\b(\d+\s+(?:week|weeks|month|months|year|years|hafta|ay|yıl)\s+ago|[4-9]\s+days?\s+ago|[123]\d\s+days?\s+ago)\b", re.I)
 
 
 def _text(el) -> str:
     return el.get_text(" ", strip=True) if el else ""
 
 
-def _parse_cards(html_text: str, jobs: dict[str, Job]) -> int:
+def _check_linkedin_date(dt_iso: str, human_text: str, max_days: int) -> tuple[bool, str]:
+    """İlanın son `max_days` (3 gün) içinde yayınlanıp yayınlanmadığını doğrular ve okunaklı tarih döner."""
+    today = date.today()
+    if dt_iso:
+        try:
+            posted_date = datetime.strptime(dt_iso[:10], "%Y-%m-%d").date()
+            diff = (today - posted_date).days
+            if diff > max_days:
+                return False, ""
+            if diff <= 0:
+                label = f"Bugün ({dt_iso[:10]})"
+            elif diff == 1:
+                label = f"Dün ({dt_iso[:10]})"
+            else:
+                label = f"{diff} gün önce ({dt_iso[:10]})"
+            return True, label
+        except ValueError:
+            pass
+
+    low = (human_text or "").lower()
+    if any(w in low for w in ("week", "hafta", "month", "ay", "year", "yıl")):
+        return False, ""
+    m = re.search(r"(\d+)\s*(?:day|gün)", low)
+    if m and int(m.group(1)) > max_days:
+        return False, ""
+    return True, human_text or "Son 3 gün içinde"
+
+
+def _parse_cards(html_text: str, jobs: dict[str, Job], max_days: int) -> int:
     soup = BeautifulSoup(html_text, "html.parser")
     added = 0
     for card in soup.select("div.base-card"):
@@ -42,6 +70,12 @@ def _parse_cards(html_text: str, jobs: dict[str, Job]) -> int:
         jid = m.group(1)
         link = card.select_one("a.base-card__full-link")
         time_el = card.select_one("time")
+        dt_iso = time_el.get("datetime", "").strip() if time_el else ""
+        human_time = _text(time_el)
+        is_fresh, label = _check_linkedin_date(dt_iso, human_time, max_days)
+        if not is_fresh:
+            continue
+
         jobs[jid] = Job(
             source="LinkedIn",
             native_id=jid,
@@ -49,14 +83,15 @@ def _parse_cards(html_text: str, jobs: dict[str, Job]) -> int:
             company=_text(card.select_one(".base-search-card__subtitle")),
             location=_text(card.select_one(".job-search-card__location")),
             url=(link["href"].split("?")[0] if link else f"https://www.linkedin.com/jobs/view/{jid}"),
-            posted=time_el.get("datetime", "") if time_el else "",
+            posted=label,
+            extra={"Yayınlanma": label},
         )
         added += 1
     return added
 
 
-def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
-    """LinkedIn'e hiç dokunmadan arama motoru köprüsü üzerinden yeni LinkedIn staj ilanlarını bulur."""
+def _search_via_ddg(jobs: dict[str, Job], max_days: int) -> int:
+    """Doğrudan kanallar engellenirse arama motoru köprüsü üzerinden son günlerin LinkedIn staj ilanlarını bulur."""
     from ddgs import DDGS
 
     queries = [
@@ -64,10 +99,9 @@ def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
         "site:linkedin.com/jobs/view (Data Analyst OR Veri Analizi OR Business Intelligence) (Stajyer OR Intern) Istanbul",
     ]
     added = 0
-    ddgs = DDGS()
     for q in queries:
         try:
-            for res in ddgs.text(q, region="tr-tr", max_results=10, backend="yahoo"):
+            for res in DDGS().text(q, region="tr-tr", timelimit="w", max_results=10, backend="yahoo"):
                 href = urllib.parse.unquote(res.get("href", ""))
                 m = re.search(r"linkedin\.com/jobs/view/[^\"<>?\s]*?(\d{8,12})", href)
                 if not m:
@@ -77,6 +111,8 @@ def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
                     continue
                 raw_title = res.get("title", "")
                 snippet = res.get("body", "")
+                if OLD_SNIPPET_RE.search(snippet) or OLD_SNIPPET_RE.search(raw_title):
+                    continue
                 title, company = raw_title, "LinkedIn İlanı"
                 hm = re.match(r"^(.+?)\s+hiring\s+(.+?)(?:\s+in\s+|\s*\|\s*LinkedIn|$)", raw_title, re.I)
                 if hm:
@@ -91,6 +127,8 @@ def _search_via_ddg(client: httpx.Client, jobs: dict[str, Job]) -> int:
                     location="Istanbul, Turkey",
                     url=f"https://www.linkedin.com/jobs/view/{jid}",
                     description=snippet,
+                    posted=f"Son {max_days} gün içinde",
+                    extra={"Yayınlanma": f"Son {max_days} gün içinde"},
                 )
                 added += 1
         except Exception as e:  # noqa: BLE001
@@ -107,15 +145,17 @@ def search(
     on_issue: ProgressFn = noop,
 ) -> list[Job]:
     jobs: dict[str, Job] = {}
+    any_direct_ok = False
 
-    # 1. Kanal: Ana SSR Web Arama Sayfası (tek istekte ~60 ilan döner, 429'a takılmaz)
+    # 1. Kanal: Ana SSR Web Arama Sayfası (sortBy=DD ile en yeni ilanlar en üstte, 3 gün filtreli)
     # 2. Kanal: Eğer SSR 429/hata verirse otomatik Guest API'ye düşer
     for kw in keywords:
         params = {
             "keywords": kw,
             "location": location,
             "f_E": "1",                       # Deneyim seviyesi: Staj
-            "f_TPR": f"r{days * 86400}",      # Son N gün
+            "f_TPR": f"r{days * 86400}",      # Son N gün (3 gün = r259200)
+            "sortBy": "DD",                   # En yeni yayınlanan ilanlar en üstte (Date Descending)
             "position": "1",
             "pageNum": "0",
         }
@@ -127,27 +167,28 @@ def search(
                     log.info("LinkedIn %s 429 döndü, alternatif kanala geçiliyor...", endpoint_name)
                     continue
                 r.raise_for_status()
-                count = _parse_cards(r.text, jobs)
-                if count > 0:
-                    fetched = True
-                    break
+                _parse_cards(r.text, jobs, max_days=days)
+                fetched = True
+                any_direct_ok = True
+                break
             except httpx.HTTPError as e:
                 log.debug("LinkedIn %s hatası (%s): %s", endpoint_name, kw, e)
                 continue
 
         if not fetched:
-            log.info("LinkedIn doğrudan kanallar '%s' için yanıt vermedi, arama motoru köprüsü kullanılacak.", kw)
+            log.info("LinkedIn doğrudan kanallar '%s' için yanıt vermedi.", kw)
         polite_sleep(2.5, 4.5)
 
-    # 3. Kanal: Arama Motoru Köprüsü (DuckDuckGo) — her zaman ek/yedek kaynak olarak çalıştırılır
-    ddg_added = _search_via_ddg(client, jobs)
-    if ddg_added:
-        log.info("DuckDuckGo köprüsünden %d ek LinkedIn ilanı bulundu", ddg_added)
+    # 3. Kanal: Yalnızca doğrudan kanallar engellendiyse arama motoru köprüsünü çalıştır (eski indeks karışmaması için)
+    if not any_direct_ok:
+        ddg_added = _search_via_ddg(jobs, max_days=days)
+        if ddg_added:
+            log.info("Arama motoru köprüsünden %d yeni LinkedIn ilanı bulundu", ddg_added)
 
-    if not jobs:
+    if not jobs and not any_direct_ok:
         on_issue("⚠️ LinkedIn tüm kanallarda hız sınırına takıldı; sonraki saat tekrar denenecek.")
 
-    log.info("LinkedIn (çok kanallı): toplam %d benzersiz ilan bulundu", len(jobs))
+    log.info("LinkedIn (son %d gün): toplam %d taze ilan bulundu", days, len(jobs))
     return list(jobs.values())
 
 
@@ -184,7 +225,6 @@ def fetch_detail(client: httpx.Client, job: Job) -> Job:
             log.debug("LinkedIn detay alternatif kanal hatası (%s): %s", job.native_id, e)
             continue
 
-    # Her iki detay kanalı da 429 verdiyse ama elimizde başlık/şirket varsa ilanı kaybetmemek için başlığı açıklama yap
     if not job.description and job.title:
         job.description = f"{job.title} — {job.company} ({job.location})"
     return job

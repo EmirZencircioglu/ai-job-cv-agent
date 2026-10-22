@@ -80,7 +80,7 @@ sources:
   linkedin:
     enabled: true
     location: "Istanbul, Turkey"   # LinkedIn Türkçe 'İ' harfini tanımıyor, ASCII yazılmalı
-    posted_within_days: 7
+    posted_within_days: 3          # Sadece son 3 gün (ve anlık yeni) ilanlar
   kariyernet:
     enabled: true
     # kariyer.net/is-ilanlari/stajyer?ct=34,82&kw=<sorgu> (ve 403 durumunda arama motoru köprüsü) ile aranır

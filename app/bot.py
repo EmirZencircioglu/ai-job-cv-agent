@@ -59,6 +59,7 @@ class JobCard:
     matched: list[str] = field(default_factory=list)
     missing: list[str] = field(default_factory=list)
     reason: str = ""
+    posted: str = ""
 
 
 def format_job(job: JobCard) -> str:
@@ -69,6 +70,8 @@ def format_job(job: JobCard) -> str:
         f"🏢 {e(job.company)}  ·  📍 {e(job.location)}",
         f"📊 Uyum: <b>%{job.score}</b> {bar}",
     ]
+    if job.posted:
+        lines.append(f"🕒 Yayınlanma: <b>{e(job.posted)}</b>")
     if job.matched:
         lines.append(f"✅ Eşleşen: {e(', '.join(job.matched))}")
     if job.missing:
@@ -201,14 +204,14 @@ async def cmd_ara(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
 
-    await update.message.reply_text("🔎 Son 1 haftalık ilanlar taranıyor, yaşanan her durumu anlık bildireceğim...")
+    await update.message.reply_text("🔎 Son 3 günlük ve anlık yeni ilanlar taranıyor, yaşanan her durumu anlık bildireceğim...")
     new, sent = await run_scan(ctx.application, force_notify=True, on_issue=live_report)
     st = storage.stats()
     if sent == 0:
         await update.message.reply_html(
             f"✅ Tarama bitti ({new} yeni ilan incelendi, toplam {sum(st.values())} ilan kayıtlı).\n"
             f"Son taramadan beri <b>%{min_score()}</b> eşiğini geçen <i>daha önce gönderilmemiş</i> yeni bir ilan çıkmadı.\n\n"
-            "💡 Son 1 haftada bulunan en uygun ilanları tekrar görmek için <code>/son</code> yazabilirsin."
+            "💡 Son 3 günde bulunan en uygun ilanları tekrar görmek için <code>/son</code> yazabilirsin."
         )
     else:
         await update.message.reply_text(f"✅ Tarama bitti. {new} yeni ilan incelendi, {sent} tanesini gönderdim.")
@@ -222,10 +225,10 @@ async def cmd_son(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     limit = int(ctx.args[0]) if (ctx.args and ctx.args[0].isdigit()) else 10
     rows = storage.top_jobs(min_sc=60, limit=min(limit, 15))
     if not rows:
-        await update.message.reply_text("Henüz kayıtlı uygun ilan yok. /ara ile tarama başlatabilirsin.")
+        await update.message.reply_text("Son 3 günde kayıtlı uygun ilan yok. /ara ile tarama başlatabilirsin.")
         return
     await update.message.reply_html(
-        f"📋 <b>Son 1 haftalık aramada bulunan en yüksek puanlı {len(rows)} staj ilanı:</b>"
+        f"📋 <b>Son 3 günde bulunan en yüksek puanlı {len(rows)} taze staj ilanı:</b>"
     )
     for row in rows:
         await send_job(ctx.application, _card(row, json.loads(row["match_json"])))

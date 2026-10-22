@@ -103,11 +103,11 @@ def reevaluate_threshold(threshold: int) -> int:
 
 
 def top_jobs(min_sc: int, limit: int = 10) -> list[dict]:
-    """Son taranan ilanlar arasından eşik üstü en yüksek puanlı staj ilanlarını döner."""
+    """Son 3 günde taranan ilanlar arasından eşik üstü en yüksek puanlı staj ilanlarını döner."""
     with _conn() as c:
         rows = c.execute(
             "SELECT * FROM jobs WHERE score >= ? AND match_json IS NOT NULL AND status != 'skipped' "
-            "ORDER BY score DESC LIMIT ?",
+            "AND created_at >= datetime('now', '-3 days') ORDER BY score DESC LIMIT ?",
             (min_sc, limit * 2),
         ).fetchall()
     out = []

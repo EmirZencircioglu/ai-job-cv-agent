@@ -28,6 +28,8 @@ def _quiet_now() -> bool:
 
 
 def _card(row: dict, m: dict) -> JobCard:
+    import json as _json
+
     extras = []
     if m.get("duration_months"):
         extras.append(f"{m['duration_months']} ay")
@@ -36,11 +38,16 @@ def _card(row: dict, m: dict) -> JobCard:
     if m.get("work_model"):
         extras.append(m["work_model"])
     loc = row["location"] + (f" · {', '.join(extras)}" if extras else "")
+    posted = ""
+    try:
+        posted = _json.loads(row.get("extra") or "{}").get("Yayınlanma", "")
+    except Exception:  # noqa: BLE001
+        pass
     return JobCard(
         job_id=row["id"], title=row["title"], company=row["company"], location=loc,
         url=row["url"], source=row["source"], score=int(m["score"]),
         matched=m.get("matched_skills", []), missing=m.get("missing_skills", []),
-        reason=m.get("reason", ""),
+        reason=m.get("reason", ""), posted=posted,
     )
 
 
