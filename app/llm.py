@@ -82,6 +82,9 @@ def generate_structured(
                 usage.record(model_name, "busy")
                 _cooldown_until[model_name] = time.time() + 900
                 continue
+            if any(k in f"{type(e).__name__} {msg}" for k in ("ReadError", "ConnectError", "Timeout", "ServerError", "500", "502", "504")):
+                log.info("Gemini %s anlık ağ/sunucu kesintisi (%s), sıradaki modele geçiliyor...", model_name, type(e).__name__)
+                continue
             usage.record(model_name, "error")
             raise
     raise last_err  # type: ignore[misc]

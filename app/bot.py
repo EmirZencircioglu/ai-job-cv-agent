@@ -335,13 +335,34 @@ async def cmd_modeller(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(header + "\n\n" + usage.summary_text())
 
 
+_bg_net_errors = 0
+
+
 async def on_error(update: object, ctx: ContextTypes.DEFAULT_TYPE) -> None:
-    """Yakalanmamış herhangi bir hata olursa kullanıcının sessizce beklememesi için Telegram'a bildirir."""
-    log.error("Beklenmeyen hata:", exc_info=ctx.error)
+    """Ciddi hataları ve kullanıcı işlemlerindeki tüm sorunları Telegram'a bildirir;
+    yalnızca boşta beklerken (update=None) yaşanan tekil 1 saniyelik soket yenilemelerini susturur.
+    """
+    global _bg_net_errors
+    err = ctx.error
+    err_str = f"{type(err).__name__}: {err}" if err else "Bilinmeyen hata"
+    is_transient_net = any(
+        k in err_str for k in ("ReadError", "ConnectError", "RemoteProtocolError", "TimedOut", "NetworkError")
+    )
+
+    # Boşta beklerken (kullanıcı komutu yokken) tekil soket yenilenmesi olduysa:
+    if update is None and is_transient_net:
+        _bg_net_errors += 1
+        log.info("Anlık arka plan bağlantı yenilenmesi (%d): %s", _bg_net_errors, err_str)
+        if _bg_net_errors < 3:
+            return  # 1-2 kerelik anlık yenilenmede rahatsız etme; 3 kez üst üste olursa ciddi sayıp bildir!
+    else:
+        _bg_net_errors = 0
+
+    log.error("Ciddi/işlem hatası:", exc_info=err)
     try:
         await ctx.application.bot.send_message(
             chat_id=int(env("TELEGRAM_CHAT_ID")),
-            text=f"❌ İşlem sırasında beklenmeyen bir sorun oluştu:\n{ctx.error}",
+            text=f"❌ İşlem sırasında beklenmeyen bir sorun oluştu:\n{err_str}",
         )
     except Exception:  # noqa: BLE001
         pass
