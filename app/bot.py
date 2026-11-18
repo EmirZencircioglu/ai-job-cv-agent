@@ -12,6 +12,7 @@ from __future__ import annotations
 import html
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -338,28 +339,31 @@ async def cmd_modeller(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_html(header + "\n\n" + usage.summary_text())
 
 
-_bg_net_errors = 0
+_bg_net_error_times: list[float] = []
+_NET_WINDOW_SEC = 180  # 3 dakika içinde üst üste 3 bağlantı hatası olursa ciddi sayılır
 
 
 async def on_error(update: object, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     """Ciddi hataları ve kullanıcı işlemlerindeki tüm sorunları Telegram'a bildirir;
-    yalnızca boşta beklerken (update=None) yaşanan tekil 1 saniyelik soket yenilemelerini susturur.
+    yalnızca boşta beklerken (update=None) 3 dakika içinde 3'ten az yaşanan anlık ağ dalgalanmalarını susturur.
     """
-    global _bg_net_errors
+    global _bg_net_error_times
     err = ctx.error
     err_str = f"{type(err).__name__}: {err}" if err else "Bilinmeyen hata"
     is_transient_net = any(
         k in err_str for k in ("ReadError", "ConnectError", "RemoteProtocolError", "TimedOut", "NetworkError")
     )
 
-    # Boşta beklerken (kullanıcı komutu yokken) tekil soket yenilenmesi olduysa:
     if update is None and is_transient_net:
-        _bg_net_errors += 1
-        log.info("Anlık arka plan bağlantı yenilenmesi (%d): %s", _bg_net_errors, err_str)
-        if _bg_net_errors < 3:
-            return  # 1-2 kerelik anlık yenilenmede rahatsız etme; 3 kez üst üste olursa ciddi sayıp bildir!
+        now = time.monotonic()
+        _bg_net_error_times = [t for t in _bg_net_error_times if now - t <= _NET_WINDOW_SEC]
+        _bg_net_error_times.append(now)
+        log.info("Anlık arka plan ağ yenilenmesi (son 3 dk: %d/3): %s", len(_bg_net_error_times), err_str)
+        if len(_bg_net_error_times) < 3:
+            return
+        _bg_net_error_times.clear()  # Bildirdikten sonra pencereyi sıfırla ki bildirim yağmuru olmasın
     else:
-        _bg_net_errors = 0
+        _bg_net_error_times.clear()
 
     log.error("Ciddi/işlem hatası:", exc_info=err)
     try:
@@ -373,7 +377,15 @@ async def on_error(update: object, ctx: ContextTypes.DEFAULT_TYPE) -> None:
 
 # ---------------------------------------------------------------- uygulama
 def build_app() -> Application:
-    app = Application.builder().token(env("TELEGRAM_BOT_TOKEN")).build()
+    app = (
+        Application.builder()
+        .token(env("TELEGRAM_BOT_TOKEN"))
+        .connect_timeout(15.0)
+        .read_timeout(30.0)
+        .get_updates_connect_timeout(15.0)
+        .get_updates_read_timeout(30.0)
+        .build()
+    )
     only_me = filters.Chat(chat_id=int(env("TELEGRAM_CHAT_ID")))  # Başkaları botu kullanamaz
 
     app.add_handler(CommandHandler(["start", "yardim", "help"], cmd_start, filters=only_me))
