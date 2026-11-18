@@ -97,6 +97,6 @@ sources:
     lookback_days: 3
 
 scheduler:
-  interval_minutes: 60             # Saat başı (60 dk) otomatik tarama
-  jitter_minutes: 5                # +/- 5 dk küçük rastgele sapma
+  interval_minutes: 30             # Yarım saatte bir (30 dk) otomatik tarama
+  jitter_minutes: 3                # +/- 3 dk küçük rastgele sapma
   quiet_hours: [3, 7]              # Gece 03:00 - 07:00 arası sessiz saatler
