@@ -7,77 +7,100 @@
     "LinkedIn",
     "Github"
   ],
-  "summary": "I am a third-year Finance and Banking student aiming to build my career in investment, portfolio management, and treasury. I develop financial data analysis and fintech projects using Python, SQL, and Excel. I am currently preparing for Capital Markets Licensing exams while strengthening my analytical thinking, teamwork, and leadership skills through student club activities.",
+  "summary": "Finans ve Bankacılık 3. sınıf öğrencisiyim. Kariyerimi yatırım, portföy yönetimi ve hazine alanlarında geliştirmeyi hedefliyorum. Python, SQL ve Excel kullanarak finansal veri analizi ve finansal teknoloji projeleri geliştiriyorum. SPL lisans sınavlarına hazırlanıyor; analitik düşünme, ekip çalışması ve liderlik becerilerimi kulüp faaliyetleriyle destekliyorum.",
   "education": [
     {
-      "school": "Nişantaşı University",
-      "degree": "",
-      "field": "Finance and Banking",
+      "school": "Nişantaşı Üniversitesi",
+      "degree": "Lisans",
+      "field": "Finans ve Bankacılık",
       "start": "2024",
       "end": "2028",
       "gpa": "",
-      "details": []
+      "details": [
+        "Sermaye Piyasası Faaliyetleri Düzey 1 lisansı (Sınav Sürecinde)"
+      ]
     }
   ],
   "experience": [
     {
-      "title": "Stock Market and Investment Club",
-      "company": "Event Organizer",
+      "title": "Başkan",
+      "company": "Finans ve Bankacılık Kulübü",
       "location": "",
-      "start": "October 2025",
-      "end": "Present",
+      "start": "Ekim 2026",
+      "end": "Devam Ediyor",
       "bullets": [
-        "Organized 3 institutional seminars and technical visits with more than 50 participants."
+        "Bankalara yönelik 3 teknik gezi ve 1 sektörel seminer organize edildi."
       ]
     },
     {
-      "title": "Human Resources Assistant",
+      "title": "Organizasyon Asistanı",
       "company": "100sClub",
       "location": "",
-      "start": "August 2025",
-      "end": "Present",
+      "start": "Eylül 2026",
+      "end": "Kasım 2026",
       "bullets": [
-        "Managed candidate communication and interview organization processes.",
-        "Supported the planning and coordination of campus programs."
+        "4 ekip üyesinin görev takibi ve süreç koordinasyonu sağlandı.",
+        "Organizasyon süreçlerinde 3 ekip üyesine operasyonel destek verildi."
+      ]
+    },
+    {
+      "title": "Etkinlik Organizatörü",
+      "company": "Borsa ve Yatırım Kulübü",
+      "location": "",
+      "start": "Ekim 2025",
+      "end": "Ekim 2026",
+      "bullets": [
+        "50'den fazla katılımcıya ulaşan 3 kurumsal seminer ve teknik gezi organize edildi."
+      ]
+    },
+    {
+      "title": "İnsan Kaynakları Asistanı",
+      "company": "100sClub",
+      "location": "",
+      "start": "Ağustos 2025",
+      "end": "Eylül 2026",
+      "bullets": [
+        "Aday iletişimi ve mülakat organizasyon süreçleri yürütüldü.",
+        "Kampüs programlarının planlanmasına destek verildi."
       ]
     },
     {
       "title": "AI Project Developer Intern",
       "company": "Microsoft",
       "location": "",
-      "start": "July 2026",
-      "end": "August 2026",
+      "start": "Temmuz 2026",
+      "end": "Ağustos 2026",
       "bullets": [
-        "Developed a locally running financial RAG assistant using Microsoft Foundry Local, Qwen3-8B, Node.js, and SQLite.",
-        "Implemented document search, source-cited responses, financial safety checks, and automated testing processes."
+        "Microsoft Foundry Local, Qwen3-8B, Node.js ve SQLite kullanılarak yerel çalışan finansal RAG asistanı geliştirildi.",
+        "Belge arama, kaynak gösterimli yanıt, finansal güvenlik kontrolleri ve otomatik test süreçleri uygulandı."
       ]
     },
     {
-      "title": "Vice President",
-      "company": "Finance and Banking Club",
+      "title": "Başkan Yardımcısı",
+      "company": "Finans ve Bankacılık Kulübü",
       "location": "",
-      "start": "October 2024",
-      "end": "June 2025",
+      "start": "Ekim 2024",
+      "end": "Haziran 2025",
       "bullets": [
-        "Organized finance summits and technical visits.",
-        "Invited speakers to the university campus and contributed to events through corporate sponsorship agreements."
+        "Finans zirvesi ve teknik geziler organize edildi.",
+        "7 sektör profesyonelinin kampüse davet edilmesi ve kurumsal sponsorluk süreçlerine katkı sağlandı."
       ]
     },
     {
-      "title": "Teller Intern",
-      "company": "NKolay Payment Institution",
+      "title": "Gişe Görevlisi Stajyer",
+      "company": "NKolay Ödeme Kuruluşu",
       "location": "",
-      "start": "September 2022",
-      "end": "June 2023",
+      "start": "Eylül 2022",
+      "end": "Haziran 2023",
       "bullets": [
-        "Managed more than 50 financial transactions daily with 100% accuracy, contributing to operational efficiency and customer satisfaction."
+        "Günlük 50+ finansal işlemi %100 doğrulukla yöneterek operasyonel verimlilik ve müşteri memnuniyetine katkı sağlandı."
       ]
     }
   ],
   "projects": [
     {
-      "name": "FinansBot – Local Financial RAG Assistant",
-      "description": "Developed a locally running financial RAG system using Node.js, Foundry Local, and Qwen3-8B. Created an AI application capable of generating source-cited answers based on financial documents.",
+      "name": "FinansBot – Yerel Finans RAG Asistanı",
+      "description": "Node.js, Foundry Local ve Qwen3-8B kullanarak yerel çalışan finans RAG sistemi geliştirildi. Finans belgelerinden kaynak göstererek cevap üreten yapay zekâ uygulaması oluşturuldu.",
       "technologies": [
         "Node.js",
         "Foundry Local",
@@ -86,19 +109,19 @@
       ]
     },
     {
-      "name": "AI-Powered Financial Statement Analysis",
-      "description": "Developed an application that analyzes financial statements imported into Excel. Generated AI-powered balance sheet interpretations.",
+      "name": "Yapay Zeka Destekli Finansal Tablo Analizi",
+      "description": "Excel'e aktarılan finansal tabloları analiz eden uygulama geliştirildi. Yapay zekâ destekli bilanço yorumları oluşturuldu.",
       "technologies": [
         "Excel",
         "AI"
       ]
     },
     {
-      "name": "AI-Powered Technical Analysis",
-      "description": "Developed an application that interprets RSI and MACD indicators. Provided investment alternatives based on different market scenarios.",
+      "name": "Yapay Zeka Destekli Teknik Analiz",
+      "description": "RSI ve MACD göstergelerini yorumlayan uygulama geliştirildi. Farklı piyasa senaryolarına göre yatırım alternatifleri sunuldu.",
       "technologies": [
         "Python",
-        "Technical Indicators (RSI, MACD)"
+        "Teknik Göstergeler (RSI, MACD)"
       ]
     }
   ],
@@ -113,33 +136,32 @@
     "SQLite"
   ],
   "finance_skills": [
-    "Financial Analysis",
-    "Technical Analysis",
-    "Fundamental Analysis",
-    "Risk Management",
-    "Portfolio Monitoring",
-    "Financial Statement Analysis",
-    "Balance Sheet Interpretations"
+    "Finansal Analiz",
+    "Teknik Analiz",
+    "Temel Analiz",
+    "Risk Yönetimi",
+    "Portföy Takibi",
+    "Finansal Tablo Analizi"
   ],
   "soft_skills": [
-    "Analytical thinking",
-    "Teamwork",
-    "Leadership",
-    "Communication",
-    "Event organization"
+    "Analitik düşünme",
+    "Ekip çalışması",
+    "Liderlik",
+    "Süreç koordinasyonu",
+    "Etkinlik organizasyonu"
   ],
   "languages": [
-    "English (Intermediate)",
-    "Spanish (Beginner)"
+    "İngilizce (İleri seviye)",
+    "İspanyolca (Orta)"
   ],
   "certificates": [
-    "Capital Markets Activities Level 1 License (Exam Preparation Process)",
-    "Microsoft | AI Innovators Summer Internship (August 2026)",
-    "TSKB | Future of Finance Academy (July 2026)",
-    "HSBC | Step Up Banking Program (December 2025)",
-    "QNB Bank | Online Internship Program (August 2025)",
-    "İş Bankası | Next Generation Banking Simulation (June 2025)",
-    "DenizBank | Denizaşırı Online Internship Program (April 2025)"
+    "Sermaye Piyasası Faaliyetleri Düzey 1 lisansı (Sınav Sürecinde)",
+    "Microsoft | AI Innovators Summer Internship (Ağustos 2026)",
+    "TSKB | Geleceğin Finansı Akademisi (Temmuz 2026)",
+    "HSBC | Step Up Adım Adım Bankacılık Programı (Aralık 2025)",
+    "QNB Bank | Online Staj Programı (Ağustos 2025)",
+    "İş Bankası | Yeni Nesil Bankacılık Simülasyonu (Haziran 2025)",
+    "DenizBank | Denizaşırı Online Staj Programı (Nisan 2025)"
   ],
   "target_roles": [
     "Veri Analizi Stajyeri",
@@ -150,18 +172,18 @@
     "Investment Intern",
     "Portföy Yönetimi Stajyeri",
     "Portfolio Management Intern",
+    "Hazine Stajyeri",
     "Uzun Dönem Stajyer",
     "Proje Bazlı Stajyer"
   ],
   "strengths": [
-    "Finans ve bankacılık akademik altyapısını Python, SQL ve RAG tabanlı yapay zeka/fintech projeleriyle birleştirmesi",
-    "Mali tablo analizi, teknik ve temel analiz konularında hands-on proje deneyimi",
-    "Finans ve yatırım kulüplerinde aktif liderlik ve organizasyon tecrübesi",
-    "Ödeme kuruluşu ve kurumsal program deneyimleri"
+    "Finans ve bankacılık akademik altyapısını Python, SQL, Node.js ve RAG tabanlı yapay zeka/fintech projeleriyle birleştirmesi",
+    "İleri seviye İngilizce ve orta seviye İspanyolca dil yetkinliği",
+    "Finans ve Bankacılık Kulübü Başkanlığı ile 100sClub süreç koordinasyonundan gelen aktif liderlik ve ekip yönetimi deneyimi",
+    "Finansal tablo analizi, teknik/temel analiz, Microsoft AI stajı ve NKolay ödeme kuruluşu deneyimleri"
   ],
   "gaps": [
-    "SPL Düzey 1 lisansının hazırlık aşamasında olması, henüz tamamlanmamış olması",
-    "İngilizce seviyesinin Intermediate düzeyinde olması (uluslararası yatırım/portföy yönetimi rolleri için C1 aranabilmektedir)",
-    "Power BI, Tableau veya Bloomberg/FactSet gibi ileri düzey veri görselleştirme veya finansal terminal deneyiminin belirtilmemiş olması"
+    "SPL Düzey 1 lisansının sınav sürecinde olması (henüz tamamlanmamış)",
+    "Power BI, Tableau veya Bloomberg/FactSet gibi ileri düzey veri görselleştirme ya da finansal terminal deneyiminin belirtilmemiş olması"
   ]
 }
